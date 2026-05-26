@@ -640,6 +640,14 @@ function randomKana() {
   return Array.from({length: len}, () => hiragana[Math.floor(Math.random() * hiragana.length)]).join('');
 }
 
+// ── 本文レンダリング（配列対応） ──
+function renderBody(body) {
+  if (Array.isArray(body)) {
+    return body.map(line => line === '' ? '<br>' : line).join('<br>');
+  }
+  return body; // 文字列のままでも動く（後方互換）
+}
+
 // ── エントリーHTML生成 ──
 function renderDiary(post) {
   const photoHtml = post.photo
@@ -654,7 +662,7 @@ function renderDiary(post) {
           <span class="label-tag diary">diary</span>
         </div>
         <h2><a href="#">${post.title}</a></h2>
-        <p>${post.body}</p>
+        <p>${renderBody(post.body)}</p>
       </div>
     </article>`;
 }
@@ -685,7 +693,7 @@ function renderEssay(post, num) {
         <span class="label-tag essay">essay</span>
       </div>
       <h2><a href="#">${post.title}</a></h2>
-      <p>${post.body}</p>
+      <p>${renderBody(post.body)}</p>
     </article>`;
 }
 
