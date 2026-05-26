@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- ▼ ブラウザタブのタイトルを編集 ▼ -->
-<title>ここにいた</title>
+<title>こらない・こらない</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
@@ -550,8 +550,8 @@ footer .f-left {
     <div class="header-inner">
       <div class="site-id">
         <!-- ▼▼▼ ブログタイトルを編集 ▼▼▼ -->
-        <span class="site-kana">k o k o . n i . i t a</span>
-        <h1 class="site-title">ここにいた</h1>
+        <span class="site-kana">k o r a n a i . k o r a n a i </span>
+        <h1 class="site-title">こらない・こらない</h1>
         <!-- ▲▲▲ ブログタイトルを編集 ▲▲▲ -->
       </div>
       <div class="header-deco-box" aria-hidden="true">
@@ -560,11 +560,11 @@ footer .f-left {
     </div>
 
     <nav>
-      <a href="#" class="active">すべて</a>
-      <a href="#">日記</a>
-      <a href="#">ことば</a>
-      <a href="#">文章</a>
-      <span class="nav-count">5 entries</span>
+      <a href="#" class="active" data-category="all">すべて</a>
+      <a href="#" data-category="diary">日記</a>
+      <a href="#" data-category="kana">ことば</a>
+      <a href="#" data-category="essay">文章</a>
+      <span class="nav-count js-count">5 entries</span>
     </nav>
   </header>
 
@@ -573,7 +573,7 @@ footer .f-left {
     <div class="entries">
 
       <!-- 日記（写真つき） -->
-      <article class="entry entry-diary">
+      <article class="entry entry-diary" data-category="diary">
         <!-- 実際の画像を使うときは↓のimgタグを使う -->
         <!-- <img class="diary-img" src="your-photo.jpg" alt="写真の説明"> -->
         <div class="diary-img-placeholder">
@@ -590,7 +590,7 @@ footer .f-left {
       </article>
 
       <!-- ことば -->
-      <article class="entry entry-kana">
+      <article class="entry entry-kana" data-category="kana">
         <div class="kana-sidebar">
           <div class="kana-mark"></div>
           <span class="kana-label-date">05.24</span>
@@ -613,7 +613,7 @@ footer .f-left {
       </div>
 
       <!-- 文章 -->
-      <article class="entry entry-essay">
+      <article class="entry entry-essay" data-category="essay">
         <span class="essay-num">01</span>
         <div class="entry-label-row">
           <span class="label-date">2026.05.20</span>
@@ -624,7 +624,7 @@ footer .f-left {
       </article>
 
       <!-- 日記（写真なし） -->
-      <article class="entry entry-diary">
+      <article class="entry entry-diary" data-category="diary">
         <div class="diary-img-placeholder">
           <span>no photo</span>
         </div>
@@ -639,7 +639,7 @@ footer .f-left {
       </article>
 
       <!-- ことば 2 -->
-      <article class="entry entry-kana">
+      <article class="entry entry-kana" data-category="kana">
         <div class="kana-sidebar">
           <div class="kana-mark"></div>
           <span class="kana-label-date">05.10</span>
@@ -708,7 +708,6 @@ const hiragana = [
 ];
 
 function randomKana() {
-  // 2〜3文字のひらがなをランダムに生成
   const len = Math.random() < 0.5 ? 2 : 3;
   let result = '';
   for (let i = 0; i < len; i++) {
@@ -717,19 +716,47 @@ function randomKana() {
   return result;
 }
 
-// 各「ことば」エントリーにユニークなランダムラベルを割り当て
+// 各「ことば」エントリーにランダムラベルを割り当て
 document.querySelectorAll('.js-kana-label').forEach(el => {
   el.textContent = randomKana();
 });
 
-// navのカテゴリ名もランダムひらがなに
-// 最初のリンク（すべて）だけは「全」プレフィックスで識別可能にする
+// navのカテゴリ名をランダムひらがなに（data-categoryは保持）
 document.querySelectorAll('nav a').forEach((el, i) => {
-  if (i === 0) {
-    el.textContent = '全' + randomKana();
-  } else {
-    el.textContent = randomKana();
-  }
+  el.textContent = i === 0 ? '全' + randomKana() : randomKana();
+});
+
+// ── カテゴリフィルタリング ──
+const navLinks  = document.querySelectorAll('nav a');
+const entries   = document.querySelectorAll('.entry');
+const dividers  = document.querySelectorAll('.deco-divider');
+const countEl   = document.querySelector('.js-count');
+
+navLinks.forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const cat = link.dataset.category;
+
+    // active 切り替え
+    navLinks.forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+
+    // エントリーの表示／非表示
+    let visible = 0;
+    entries.forEach(entry => {
+      const match = cat === 'all' || entry.dataset.category === cat;
+      entry.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    // divider は全表示のときだけ見せる
+    dividers.forEach(d => {
+      d.style.display = cat === 'all' ? '' : 'none';
+    });
+
+    // カウント更新
+    countEl.textContent = visible + ' entries';
+  });
 });
 </script>
 
