@@ -160,6 +160,26 @@ nav a {
   transition: color 0.15s;
   position: relative;
 }
+nav a::after {
+  content: attr(data-category);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  padding: 0.2em 0.6em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+nav a:hover::after,
+nav a.tooltip-show::after {
+  opacity: 1;
+}
 nav a + a::before {
   content: '·';
   margin-right: 1rem;
@@ -732,6 +752,14 @@ function setupFilter() {
 // ── navラベルをランダムひらがなに ──
 navLinks.forEach((el, i) => {
   el.textContent = i === 0 ? '全' + randomKana() : randomKana();
+});
+
+// ── スマホタップ時にツールチップを一瞬表示 ──
+navLinks.forEach(link => {
+  link.addEventListener('touchstart', () => {
+    link.classList.add('tooltip-show');
+    setTimeout(() => link.classList.remove('tooltip-show'), 1200);
+  }, { passive: true });
 });
 </script>
 
