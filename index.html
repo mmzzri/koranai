@@ -695,9 +695,9 @@ footer .f-left {
     <section class="about">
       <!-- ▼▼▼ プロフィールを編集 ▼▼▼ -->
       <p class="about-text">
-        書く人。書いてみている。<br>
-        できるだけ嘘をつかない。ご飯を作る、食べる。<br>
-        日記、短いことば、長い文章。
+        書いている人。都内在住のソフトウェアエンジニア。<br>
+        ギターと料理と読書と、なんとなく生きています。<br>
+        日記、短いことば、たまに長い文章。
       </p>
       <!-- ▲▲▲ プロフィールを編集 ▲▲▲ -->
       <div class="about-mark" aria-hidden="true">
@@ -711,7 +711,7 @@ footer .f-left {
   <footer>
     <!-- ▼▼▼ コピーライト・拠点情報を編集 ▼▼▼ -->
     <div class="f-left">
-      © 2026 shokkan<br>
+      © 2026 shunta<br>
       written in tokyo
     </div>
     <!-- ▲▲▲ コピーライト・拠点情報を編集 ▲▲▲ -->
@@ -738,20 +738,34 @@ function randomKana() {
 }
 
 // ── 本文レンダリング ──
+function parseInline(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>');
+}
+
 // 一覧用（省略あり）
 function renderBody(body) {
   if (Array.isArray(body)) {
-    return body.map(line => line === '' ? '<br>' : line).join('<br>');
+    return body.map(line => {
+      if (line === '') return '<br>';
+      if (line.startsWith('> ')) return `<span style="border-left:2px solid var(--orange-lt);padding-left:.5em;color:var(--ink-soft)">${parseInline(line.slice(2))}</span>`;
+      return parseInline(line);
+    }).join('<br>');
   }
-  return body;
+  return parseInline(body);
 }
 
 // モーダル用（全文・段落区切り）
 function renderBodyFull(body) {
   if (Array.isArray(body)) {
-    return body.map(line => `<p>${line}</p>`).join('');
+    return body.map(line => {
+      if (line === '') return '<p style="margin-bottom:.5em">&nbsp;</p>';
+      if (line.startsWith('> ')) return `<blockquote style="border-left:2px solid var(--orange);padding-left:.9rem;color:var(--ink-mid);margin:.6em 0;font-size:.9rem">${parseInline(line.slice(2))}</blockquote>`;
+      return `<p>${parseInline(line)}</p>`;
+    }).join('');
   }
-  return `<p>${body}</p>`;
+  return `<p>${parseInline(body)}</p>`;
 }
 
 // ── エントリーHTML生成 ──
@@ -863,21 +877,27 @@ fetch('posts.json')
     });
     container.innerHTML = html;
     countEl.textContent = posts.length + ' entries';
+
     container.querySelectorAll('.entry').forEach((el, i) => {
       el.style.animationDelay = (i * 0.07) + 's';
     });
+
+    // モーダルを開くリンクにイベント設定
     container.querySelectorAll('.open-modal').forEach(link => {
       link.addEventListener('click', e => {
         e.preventDefault();
-        openModal(allPosts[parseInt(link.dataset.index)]);
+        const index = parseInt(link.dataset.index);
+        openModal(allPosts[index]);
       });
     });
+
     setupFilter();
   })
   .catch(() => {
     container.innerHTML = '<p style="padding:2rem;color:var(--ink-soft);font-size:.85rem;">記事を読み込めませんでした。posts.json が同じフォルダにあるか確認してください。</p>';
   });
 
+// ── カテゴリフィルタ ──
 function setupFilter() {
   navLinks.forEach(link => {
     link.addEventListener('click', e => {
@@ -885,9 +905,11 @@ function setupFilter() {
       const cat = link.dataset.category;
       navLinks.forEach(l => l.classList.remove('active'));
       link.classList.add('active');
+
       const entries  = container.querySelectorAll('.entry');
       const dividers = container.querySelectorAll('.deco-divider');
       let visible = 0;
+
       entries.forEach(entry => {
         const match = cat === 'all' || entry.dataset.category === cat;
         entry.style.display = match ? '' : 'none';
@@ -899,10 +921,12 @@ function setupFilter() {
   });
 }
 
+// ── navラベルをランダムひらがなに ──
 navLinks.forEach((el, i) => {
   el.textContent = i === 0 ? '全' + randomKana() : randomKana();
 });
 
+// ── スマホタップ時にツールチップを一瞬表示 ──
 navLinks.forEach(link => {
   link.addEventListener('touchstart', () => {
     link.classList.add('tooltip-show');
