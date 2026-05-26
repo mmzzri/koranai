@@ -844,4 +844,72 @@ modalClose.addEventListener('click', closeModal);
 overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// ──
+// ── メイン：posts.json を読み込んでレンダリング ──
+const container = document.getElementById('entries');
+const navLinks  = document.querySelectorAll('nav a');
+const countEl   = document.querySelector('.js-count');
+
+fetch('posts.json')
+  .then(r => r.json())
+  .then(posts => {
+    allPosts = posts;
+    let essayCount = 0;
+    let html = '';
+    posts.forEach((post, i) => {
+      if (post.type === 'diary')  html += renderDiary(post, i);
+      if (post.type === 'kana')   html += renderKana(post, i);
+      if (post.type === 'essay')  html += renderEssay(post, ++essayCount, i);
+      if ((i + 1) % 3 === 0 && i !== posts.length - 1) html += dividerHtml;
+    });
+    container.innerHTML = html;
+    countEl.textContent = posts.length + ' entries';
+    container.querySelectorAll('.entry').forEach((el, i) => {
+      el.style.animationDelay = (i * 0.07) + 's';
+    });
+    container.querySelectorAll('.open-modal').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        openModal(allPosts[parseInt(link.dataset.index)]);
+      });
+    });
+    setupFilter();
+  })
+  .catch(() => {
+    container.innerHTML = '<p style="padding:2rem;color:var(--ink-soft);font-size:.85rem;">記事を読み込めませんでした。posts.json が同じフォルダにあるか確認してください。</p>';
+  });
+
+function setupFilter() {
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const cat = link.dataset.category;
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      const entries  = container.querySelectorAll('.entry');
+      const dividers = container.querySelectorAll('.deco-divider');
+      let visible = 0;
+      entries.forEach(entry => {
+        const match = cat === 'all' || entry.dataset.category === cat;
+        entry.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      dividers.forEach(d => { d.style.display = cat === 'all' ? '' : 'none'; });
+      countEl.textContent = visible + ' entries';
+    });
+  });
+}
+
+navLinks.forEach((el, i) => {
+  el.textContent = i === 0 ? '全' + randomKana() : randomKana();
+});
+
+navLinks.forEach(link => {
+  link.addEventListener('touchstart', () => {
+    link.classList.add('tooltip-show');
+    setTimeout(() => link.classList.remove('tooltip-show'), 1200);
+  }, { passive: true });
+});
+</script>
+
+</body>
+</html>
